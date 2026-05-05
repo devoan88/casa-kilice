@@ -6,12 +6,15 @@ import type { NextConfig } from "next";
 /** Stabilises Turbopack when `npm run dev` is started from the parent `ანი/` folder (two lockfiles). */
 const turbopackRoot = path.dirname(fileURLToPath(import.meta.url));
 /**
- * GitHub Pages static export uses `basePath` + `output: "export"`. If someone sets
- * `DEPLOY_TARGET=github-pages` on Vercel by mistake, `/` would 404 (home moves to `/casa-kilice`).
- * Vercel sets `VERCEL=1` during build and runtime — never use Pages export mode there.
+ * GitHub Pages static export uses `basePath` + `output: "export"`.
+ * That mode must NEVER run on Vercel: `/` would 404 (home would only exist under `/casa-kilice`).
+ *
+ * Only enable it in GitHub Actions (`.github/workflows/pages.yml` sets `DEPLOY_TARGET=github-pages`).
+ * `GITHUB_ACTIONS` is `true` on Actions runners and is not set by Vercel builds.
  */
 const isGithubPages =
-  process.env.DEPLOY_TARGET === "github-pages" && process.env.VERCEL !== "1";
+  process.env.DEPLOY_TARGET === "github-pages" &&
+  process.env.GITHUB_ACTIONS === "true";
 
 const nextConfig: NextConfig = {
   turbopack: {

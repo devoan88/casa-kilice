@@ -111,7 +111,8 @@ export default async function RootLayout({
 }>) {
   let showAdminFooterLink = false;
   const isStaticPreview =
-    process.env.DEPLOY_TARGET === "github-pages" && process.env.VERCEL !== "1";
+    process.env.DEPLOY_TARGET === "github-pages" &&
+    process.env.GITHUB_ACTIONS === "true";
   if (!isStaticPreview) {
     try {
       const session = await getServerSession(authOptions);
