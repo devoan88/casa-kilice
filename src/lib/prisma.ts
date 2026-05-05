@@ -51,40 +51,61 @@ function createPrismaClient() {
   const provider = process.env.PRISMA_PROVIDER ?? (process.env.NODE_ENV === "production" ? "postgres" : "sqlite");
 
   if (provider === "sqlite") {
-    const sqliteUrl = url ?? "file:./dev.db";
-    const adapter = new PrismaBetterSqlite3({ url: sqliteUrl });
-    return new PrismaClient({ adapter });
+    console.log("DEBUG: Database connecting... (sqlite)");
+    try {
+      const sqliteUrl = url ?? "file:./dev.db";
+      const adapter = new PrismaBetterSqlite3({ url: sqliteUrl });
+      return new PrismaClient({ adapter });
+    } catch (error) {
+      console.error("DEBUG ERROR:", error);
+      throw error;
+    }
   }
 
   if (!url) {
-    throw new Error("DATABASE_URL is required for Postgres deployments.");
+    const err = new Error("DATABASE_URL is required for Postgres deployments.");
+    console.error("DEBUG ERROR:", err);
+    throw err;
   }
 
-  const onVercel = process.env.VERCEL === "1";
-  if (onVercel) {
-    // Pool queries over HTTP avoid WebSocket/TLS issues that can hang or time out on serverless.
-    neonConfig.poolQueryViaFetch = true;
-  }
+  console.log("DEBUG: Database connecting... (postgres)", {
+    vercel: process.env.VERCEL === "1",
+    provider,
+    hasUrl: true,
+  });
 
-  const connectionString = normalizePostgresAdapterUrl(url);
-  const adapter = new PrismaNeon(
-    {
-      connectionString,
-      connectionTimeoutMillis: 60_000,
-      max: onVercel ? 1 : 10,
-      idleTimeoutMillis: onVercel ? 10_000 : 30_000,
-      allowExitOnIdle: onVercel,
-    },
-    {
-      onPoolError: (err) => {
-        console.error("[prisma] Neon pool error:", err);
+  try {
+    const onVercel = process.env.VERCEL === "1";
+    if (onVercel) {
+      // Pool queries over HTTP avoid WebSocket/TLS issues that can hang or time out on serverless.
+      neonConfig.poolQueryViaFetch = true;
+    }
+
+    const connectionString = normalizePostgresAdapterUrl(url);
+    const adapter = new PrismaNeon(
+      {
+        connectionString,
+        connectionTimeoutMillis: 60_000,
+        max: onVercel ? 1 : 10,
+        idleTimeoutMillis: onVercel ? 10_000 : 30_000,
+        allowExitOnIdle: onVercel,
       },
-      onConnectionError: (err) => {
-        console.error("[prisma] Neon connection error:", err);
+      {
+        onPoolError: (err) => {
+          console.error("[prisma] Neon pool error:", err);
+          console.error("DEBUG ERROR:", err);
+        },
+        onConnectionError: (err) => {
+          console.error("[prisma] Neon connection error:", err);
+          console.error("DEBUG ERROR:", err);
+        },
       },
-    },
-  );
-  return new PrismaClient({ adapter });
+    );
+    return new PrismaClient({ adapter });
+  } catch (error) {
+    console.error("DEBUG ERROR:", error);
+    throw error;
+  }
 }
 
 function resolvePrismaClient(): PrismaClient {

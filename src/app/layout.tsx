@@ -23,6 +23,22 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { LOCALE_STORAGE, LOCALES, type Locale } from "@/i18n/types";
 
+/** Neon's driver and Prisma adapters require Node; avoid accidental Edge bundling. */
+export const runtime = "nodejs";
+
+function metadataBaseUrl(): URL {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (raw) {
+    try {
+      const withProto = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+      return new URL(withProto);
+    } catch {
+      console.error("DEBUG ERROR: invalid NEXT_PUBLIC_SITE_URL — using localhost for metadataBase");
+    }
+  }
+  return new URL("http://localhost:3000");
+}
+
 const sans = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
@@ -44,7 +60,7 @@ const georgian = Noto_Serif_Georgian({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  metadataBase: metadataBaseUrl(),
   title: {
     default: "Casa Kilicé - The World's First AI Skin Innovation",
     template: "%s · Casa Kilicé",
