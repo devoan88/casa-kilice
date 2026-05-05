@@ -1,6 +1,7 @@
 import { PrismaClient } from "@/generated/prisma";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaNeon } from "@prisma/adapter-neon";
+import { neonConfig } from "@neondatabase/serverless";
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -9,6 +10,22 @@ const globalForPrisma = globalThis as unknown as {
 
 /** Bump when the Prisma schema requires a fresh client (stops stale globalThis clients from rejecting new fields). */
 const PRISMA_CLIENT_CACHE_KEY = 7;
+
+/** Append missing libpq-style query params without re-parsing credentials (avoids URL edge cases). */
+function ensureConnParam(connectionString: string, key: string, value: string): string {
+  const re = new RegExp(`(?:^|[?&])${key}=`, "i");
+  if (re.test(connectionString)) return connectionString;
+  return connectionString.includes("?")
+    ? `${connectionString}&${key}=${value}`
+    : `${connectionString}?${key}=${value}`;
+}
+
+function normalizePostgresAdapterUrl(raw: string): string {
+  let url = raw.trim();
+  url = ensureConnParam(url, "sslmode", "require");
+  url = ensureConnParam(url, "connect_timeout", "60");
+  return url;
+}
 
 function prismaDelegateShapeOk(client: PrismaClient): boolean {
   const p = client as unknown as {
@@ -42,7 +59,31 @@ function createPrismaClient() {
   if (!url) {
     throw new Error("DATABASE_URL is required for Postgres deployments.");
   }
-  const adapter = new PrismaNeon({ connectionString: url });
+
+  const onVercel = process.env.VERCEL === "1";
+  if (onVercel) {
+    // Pool queries over HTTP avoid WebSocket/TLS issues that can hang or time out on serverless.
+    neonConfig.poolQueryViaFetch = true;
+  }
+
+  const connectionString = normalizePostgresAdapterUrl(url);
+  const adapter = new PrismaNeon(
+    {
+      connectionString,
+      connectionTimeoutMillis: 60_000,
+      max: onVercel ? 1 : 10,
+      idleTimeoutMillis: onVercel ? 10_000 : 30_000,
+      allowExitOnIdle: onVercel,
+    },
+    {
+      onPoolError: (err) => {
+        console.error("[prisma] Neon pool error:", err);
+      },
+      onConnectionError: (err) => {
+        console.error("[prisma] Neon connection error:", err);
+      },
+    },
+  );
   return new PrismaClient({ adapter });
 }
 
