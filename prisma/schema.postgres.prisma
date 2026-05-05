@@ -1,0 +1,347 @@
+// Postgres schema for deployments (Neon/Supabase/Vercel Postgres).
+// Full model set mirrors prisma/schema.prisma.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- Models (copied from prisma/schema.prisma) ---
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+
+  twoFactorSecret     String?
+  isTwoFactorEnabled Boolean @default(false)
+
+  role String @default("USER")
+  points Int @default(0)
+  birthDate DateTime?
+
+  instagramHandle    String?
+  tiktokHandle       String?
+  followerCountRange String?
+
+  isMuse Boolean @default(false)
+
+  museMarketingConsent   Boolean   @default(false)
+  museMarketingConsentAt DateTime?
+
+  museStatus String?
+  museDiscountCode15 String? @unique
+  museBirthdayBoxFlag Boolean @default(false)
+  museFreeShipping Boolean @default(false)
+  musePendingCelebration String?
+
+  accounts Account[]
+  sessions Session[]
+  orders   Order[]
+  concierge ConciergeProfile?
+  ritual    RitualStreak?
+  contentSubmissions ContentSubmission[]
+  consultations     Consultation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Consultation {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userPhotoUrl        String?
+  analysisResult      String
+  aiRecommendation    String
+  primaryProductSlug  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model ContentSubmission {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fileUrl String
+  type String
+  status String @default("Pending")
+  pointsAwarded Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Visit {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  ip        String?
+  country   String?
+  region    String?
+  city      String?
+  latitude  Float?
+  longitude Float?
+
+  path      String?
+  referrer  String?
+  userAgent String?
+}
+
+model Product {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String
+  category    String  @default("General")
+  priceCents  Int
+  costCents   Int     @default(0)
+  currency    String  @default("USD")
+  imageUrl    String?
+  isActive    Boolean @default(true)
+  stock       Int     @default(100)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SiteContent {
+  id String @id @default("singleton")
+  homeHeroMainText String?
+  homeHeroSubText  String?
+  homeHeroImageUrl String?
+  gelPerUsdMinor Int @default(270)
+  gelPerEurMinor Int @default(290)
+  deliveryTbilisiCents Int @default(500)
+  deliveryRegionCents  Int @default(1000)
+  deliveryIntlCents    Int @default(4500)
+  financeTaxBps Int @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model BusinessExpense {
+  id          String   @id @default(cuid())
+  label       String
+  category    String   @default("General")
+  amountCents Int
+  currency    String   @default("GEL")
+  incurredAt  DateTime @default(now())
+  notes       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([incurredAt])
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  productId   String?
+  productName String
+  priceCents  Int
+  currency    String @default("USD")
+  stripeSessionId String? @unique
+  status String @default("created")
+  orderKind String?
+  customerFullName    String?
+  customerPhone       String?
+  customerEmail       String?
+  deliveryAddress     String?
+  deliveryZone        String?
+  paymentMethod       String?
+  lineItemsJson       String?
+  subtotalCents       Int?
+  shippingCents       Int?
+  discountCents       Int?
+  discountDescription String?
+  totalCents          Int?
+  manualPublicToken String? @unique
+  orderNumber String? @unique
+  inventoryDeducted Boolean @default(false)
+  affiliatePromoCode String?
+
+  @@index([affiliatePromoCode])
+}
+
+model PromoCoupon {
+  id         String   @id @default(cuid())
+  code       String   @unique
+  percentOff Int
+  expiresAt  DateTime
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  creators Creator[]
+}
+
+model Creator {
+  id                  String   @id @default(cuid())
+  name                String
+  socialLink          String
+  followerCount       Int      @default(0)
+  platform            String
+  profileImage        String?
+  collaborationStatus String   @default("Active")
+  promoCouponId       String?  @unique
+  promoCoupon         PromoCoupon? @relation(fields: [promoCouponId], references: [id], onDelete: SetNull)
+  media               CreatorMedia[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model CreatorMedia {
+  id        String   @id @default(cuid())
+  creatorId String
+  creator   Creator @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  fileUrl   String
+  type      String
+  createdAt DateTime @default(now())
+
+  @@index([creatorId])
+}
+
+model AbandonedCart {
+  id          String    @id @default(cuid())
+  clientKey String    @unique
+  itemsJson   String
+  lastSeenAt  DateTime  @updatedAt
+  createdAt   DateTime  @default(now())
+  convertedAt DateTime?
+}
+
+model AdminTodo {
+  id        String   @id @default(cuid())
+  body      String
+  done      Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ConciergeProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  preferredName    String?
+  skinFocus        String?
+  lastRecommendedId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RitualStreak {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  streak    Int      @default(0)
+  lastDay   String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SaasPartner {
+  id      String   @id @default(cuid())
+  name    String
+  email   String
+  website String?
+  notes   String?
+  credits Int      @default(0)
+  apiAccessEnabled Boolean @default(true)
+  allowedEmbedOrigins String?
+  widgetSiteKey String? @unique
+  stripeCustomerId       String?
+  stripeSubscriptionId   String?
+  subscriptionTier       String   @default("none")
+  subscriptionStatus     String   @default("inactive")
+  subscriptionPeriodEnd  DateTime?
+  subscriptionScansUsed  Int      @default(0)
+  keys   SaasApiKey[]
+  ledger SaasLedgerEntry[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SaasApiKey {
+  id         String      @id @default(cuid())
+  partnerId  String
+  partner    SaasPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  lookupHash String      @unique
+  keyPrefix  String
+  label      String?
+  revokedAt  DateTime?
+  lastUsedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([partnerId])
+}
+
+model SaasLedgerEntry {
+  id               String      @id @default(cuid())
+  partnerId        String
+  partner          SaasPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  creditsDelta     Int
+  balanceAfter     Int
+  amountCents      Int?
+  kind               String
+  description        String?
+  stripeSessionId    String?
+  createdAt DateTime @default(now())
+  @@index([partnerId])
+  @@index([createdAt])
+}

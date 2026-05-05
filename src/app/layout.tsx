@@ -109,14 +109,21 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getServerSession(authOptions);
   let showAdminFooterLink = false;
-  if (session?.user?.id) {
-    const row = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    });
-    showAdminFooterLink = row?.role === "ADMIN";
+  const isStaticPreview = process.env.DEPLOY_TARGET === "github-pages";
+  if (!isStaticPreview) {
+    try {
+      const session = await getServerSession(authOptions);
+      if (session?.user?.id) {
+        const row = await prisma.user.findUnique({
+          where: { id: session.user.id },
+          select: { role: true },
+        });
+        showAdminFooterLink = row?.role === "ADMIN";
+      }
+    } catch {
+      showAdminFooterLink = false;
+    }
   }
 
   const cookieLocale = (await cookies()).get(LOCALE_STORAGE)?.value;

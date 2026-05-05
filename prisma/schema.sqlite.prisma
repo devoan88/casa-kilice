@@ -1,0 +1,438 @@
+// SQLite schema for local dev. Full model set mirrors schema.prisma.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// --- Models (copied from prisma/schema.prisma) ---
+// NOTE: Keep this file identical to the canonical schema except for the datasource provider.
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+
+  /// AES-256-GCM ciphertext (base64) of the TOTP secret; only when 2FA has been enabled.
+  twoFactorSecret     String?
+  isTwoFactorEnabled Boolean @default(false)
+
+  /// `USER` | `ADMIN` — ADMIN unlocks /casa-admin (and optional legacy `ADMIN_EMAIL` match).
+  role String @default("USER")
+
+  /// Muse / creator program — balance (registration bonus + admin-approved upload points).
+  points Int @default(0)
+
+  /// Date of birth (Muse registration; optional for legacy accounts).
+  birthDate DateTime?
+
+  instagramHandle    String?
+  tiktokHandle       String?
+  /// e.g. `<5k`, `5k-20k`, `20k-50k`, `50k+`
+  followerCountRange String?
+
+  /// Completed secure Muse onboarding (not the same as session).
+  isMuse Boolean @default(false)
+
+  /// Recorded marketing / UGC usage consent for Muse join flow.
+  museMarketingConsent   Boolean   @default(false)
+  museMarketingConsentAt DateTime?
+
+  /// Muse rewards tier: `Bronze` (100+ pts), `Gold` (500+), `Elite` (1000+).
+  museStatus String?
+
+  /// Unique 15% discount code issued at Bronze threshold (server-only automation).
+  museDiscountCode15 String? @unique
+
+  /// Set when the user reaches 500+ points — logistics can use for Birthday Box.
+  museBirthdayBoxFlag Boolean @default(false)
+
+  /// Permanent free shipping once Elite (1000+ pts).
+  museFreeShipping Boolean @default(false)
+
+  /// JSON payload for one-time dashboard celebration; cleared after dismiss.
+  musePendingCelebration String?
+
+  accounts Account[]
+  sessions Session[]
+  orders   Order[]
+  concierge ConciergeProfile?
+  ritual    RitualStreak?
+  contentSubmissions ContentSubmission[]
+  consultations     Consultation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// AI skin scan / concierge outcome — admin can review photo + recommendation.
+model Consultation {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Relative path under `storage/` (e.g. `skin-scans/<userId>/<id>.jpg`), or null if scan had no upload.
+  userPhotoUrl        String?
+  /// JSON: undertone, depth, visionNotes, analysisSource, routineHints, etc.
+  analysisResult      String
+  /// Full prose shown to the client (makeup-artist tone).
+  aiRecommendation    String
+  primaryProductSlug  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+/// Muse uploads — `Pending` until manually approved; `pointsAwarded` set on approval only.
+model ContentSubmission {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Private storage path (e.g. under `storage/muse-pending/`), not a public URL.
+  fileUrl String
+
+  /// Photo | Video
+  type String
+
+  /// Pending | Approved
+  status String @default("Pending")
+
+  pointsAwarded Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Visit {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  ip        String?
+  country   String?
+  region    String?
+  city      String?
+  latitude  Float?
+  longitude Float?
+
+  path      String?
+  referrer  String?
+  userAgent String?
+}
+
+model Product {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String
+  /// Display grouping for admin / shop filters (e.g. Duo, Accessories).
+  category    String  @default("General")
+  priceCents  Int
+  /// Unit cost of goods (same currency as `priceCents`) for profit analytics.
+  costCents   Int     @default(0)
+  currency    String  @default("USD")
+  imageUrl    String?
+  isActive    Boolean @default(true)
+  /// Units on hand; decremented when an order reaches Delivered (see Order.inventoryDeducted).
+  stock       Int     @default(100)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Single-row homepage overrides edited from /casa-admin/content.
+model SiteContent {
+  id String @id @default("singleton")
+
+  /// Replaces the main hero manifesto line when set.
+  homeHeroMainText String?
+  /// Replaces the secondary hero line when set.
+  homeHeroSubText  String?
+  /// When set, replaces the scroll-hero product image with this URL.
+  homeHeroImageUrl String?
+
+  /// Fixed display FX: GEL per 1 USD (e.g. 270 = 2.70).
+  gelPerUsdMinor Int @default(270)
+  /// Fixed display FX: GEL per 1 EUR (e.g. 290 = 2.90).
+  gelPerEurMinor Int @default(290)
+
+  /// Checkout / cart delivery fee in tetri (GEL × 100).
+  deliveryTbilisiCents Int @default(500)
+  deliveryRegionCents  Int @default(1000)
+  deliveryIntlCents    Int @default(4500)
+
+  /// Estimated turnover tax rate in basis points (100 = 1.00%) for admin tax estimator.
+  financeTaxBps Int @default(0)
+
+  updatedAt DateTime @updatedAt
+}
+
+/// Manual business expenses (ads, packaging, etc.) — admin-only, for profit & reporting.
+model BusinessExpense {
+  id          String   @id @default(cuid())
+  label       String
+  category    String   @default("General")
+  amountCents Int
+  currency    String   @default("GEL")
+  incurredAt  DateTime @default(now())
+  notes       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([incurredAt])
+}
+
+model Order {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  /// Legacy single-line Stripe checkout; manual orders use `lineItemsJson`.
+  productId   String?
+  productName String
+  priceCents  Int
+  currency    String @default("USD")
+
+  stripeSessionId String? @unique
+
+  /// `created` (Stripe) · `Pending` | `Paid` | `Shipped` | `Delivered` | `Cancelled` (manual / web).
+  status String @default("created")
+
+  /// `manual` when placed via /checkout without card gateway.
+  orderKind String?
+
+  customerFullName    String?
+  customerPhone       String?
+  customerEmail       String?
+  deliveryAddress     String?
+  deliveryZone        String?
+  /// `cod` | `bank_transfer`
+  paymentMethod       String?
+  lineItemsJson       String?
+  subtotalCents       Int?
+  shippingCents       Int?
+  discountCents       Int?
+  discountDescription String?
+  totalCents          Int?
+
+  /// Opaque token for `/checkout/complete` (manual orders only).
+  manualPublicToken String? @unique
+
+  /// Public order ref, e.g. `CK-1001` (display as #CK-1001). Null for legacy Stripe rows.
+  orderNumber String? @unique
+
+  /// After stock is decremented for this order at Delivered (idempotent).
+  inventoryDeducted Boolean @default(false)
+
+  /// Promo code applied at checkout when it determined the discount (affiliate / marketing).
+  affiliatePromoCode String?
+
+  @@index([affiliatePromoCode])
+}
+
+/// Admin-created promo codes (Marketing). Checkout application can be wired separately.
+model PromoCoupon {
+  id         String   @id @default(cuid())
+  code       String   @unique
+  percentOff Int
+  expiresAt  DateTime
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  creators Creator[]
+}
+
+/// Influencer / UGC partner managed from Casa admin (separate from Muse `User` program).
+model Creator {
+  id                  String   @id @default(cuid())
+  name                String
+  socialLink          String
+  followerCount       Int      @default(0)
+  /// `Instagram` | `TikTok`
+  platform            String
+  profileImage        String?
+  /// `Active` | `Negotiating` | `Completed` | `Sent Product`
+  collaborationStatus String   @default("Active")
+  promoCouponId       String?  @unique
+  promoCoupon         PromoCoupon? @relation(fields: [promoCouponId], references: [id], onDelete: SetNull)
+  media               CreatorMedia[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+/// UGC assets uploaded for a creator (admin-only file access).
+model CreatorMedia {
+  id        String   @id @default(cuid())
+  creatorId String
+  creator   Creator @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  /// Relative path under `storage/creator-ugc/` (e.g. `{creatorId}/{file}`).
+  fileUrl   String
+  /// `Photo` | `Video`
+  type      String
+  createdAt DateTime @default(now())
+
+  @@index([creatorId])
+}
+
+/// Anonymous cart snapshots for follow-up (client posts periodically while cart has items).
+model AbandonedCart {
+  id          String    @id @default(cuid())
+  clientKey String    @unique
+  itemsJson   String
+  lastSeenAt  DateTime  @updatedAt
+  createdAt   DateTime  @default(now())
+  convertedAt DateTime?
+}
+
+/// Private admin checklist (sidebar widget).
+model AdminTodo {
+  id        String   @id @default(cuid())
+  body      String
+  done      Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ConciergeProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  preferredName    String?
+  skinFocus        String?
+  lastRecommendedId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RitualStreak {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  streak    Int      @default(0)
+  lastDay   String   @default("") // YYYY-MM-DD in user's local timezone
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// B2B customer for the skin-analysis SaaS API.
+model SaasPartner {
+  id      String   @id @default(cuid())
+  name    String
+  email   String
+  website String?
+  notes   String?
+  credits Int      @default(0)
+  /// When false, all API keys are rejected until Stripe/manual payment activates the account.
+  apiAccessEnabled Boolean @default(true)
+  /// Comma-separated origins allowed to postMessage API keys into `/embed/skin-analysis` (e.g. https://partner.com).
+  allowedEmbedOrigins String?
+  /// Public id for the embed script (`data-site-key`); paired with allowedEmbedOrigins for licensed domains.
+  widgetSiteKey String? @unique
+
+  stripeCustomerId       String?
+  stripeSubscriptionId   String?
+  /// none | basic | premium — synced from Stripe subscription metadata.
+  subscriptionTier       String   @default("none")
+  /// inactive | active | past_due | canceled | trialing | unpaid
+  subscriptionStatus     String   @default("inactive")
+  subscriptionPeriodEnd  DateTime?
+  /// Scans consumed in the current billing period (Basic tier cap); reset via Stripe webhooks.
+  subscriptionScansUsed  Int      @default(0)
+
+  keys   SaasApiKey[]
+  ledger SaasLedgerEntry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Hashed API key (never store raw secret after creation response).
+model SaasApiKey {
+  id         String      @id @default(cuid())
+  partnerId  String
+  partner    SaasPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  lookupHash String      @unique
+  keyPrefix  String
+  label      String?
+  revokedAt  DateTime?
+  lastUsedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([partnerId])
+}
+
+model SaasLedgerEntry {
+  id               String      @id @default(cuid())
+  partnerId        String
+  partner          SaasPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  creditsDelta     Int
+  balanceAfter     Int
+  /// GEL minor units when revenue (Stripe); null for pure credit movements.
+  amountCents      Int?
+  kind               String
+  description        String?
+  stripeSessionId    String?
+
+  createdAt DateTime @default(now())
+
+  @@index([partnerId])
+  @@index([createdAt])
+}

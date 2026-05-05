@@ -1,4 +1,5 @@
 import { PrismaClient } from "@/generated/prisma";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaNeon } from "@prisma/adapter-neon";
 
 const globalForPrisma = globalThis as unknown as {
@@ -30,8 +31,16 @@ function prismaDelegateShapeOk(client: PrismaClient): boolean {
  */
 function createPrismaClient() {
   const url = process.env.DATABASE_URL;
+  const provider = process.env.PRISMA_PROVIDER ?? (process.env.NODE_ENV === "production" ? "postgres" : "sqlite");
+
+  if (provider === "sqlite") {
+    const sqliteUrl = url ?? "file:./dev.db";
+    const adapter = new PrismaBetterSqlite3({ url: sqliteUrl });
+    return new PrismaClient({ adapter });
+  }
+
   if (!url) {
-    throw new Error("DATABASE_URL is required.");
+    throw new Error("DATABASE_URL is required for Postgres deployments.");
   }
   const adapter = new PrismaNeon({ connectionString: url });
   return new PrismaClient({ adapter });
