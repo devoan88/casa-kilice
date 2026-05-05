@@ -1,10 +1,12 @@
-console.log("APP_STARTING");
+import { HomeClient } from "@/app/HomeClient";
+import { getPublicSiteContent } from "@/lib/siteContent";
 
-export default function Home() {
-  return (
-    <main>
-      <h1>Hello World</h1>
-      <p>If you see this, the root route and layout are working.</p>
-    </main>
-  );
+export default async function Home() {
+  let siteContent = null;
+  try {
+    siteContent = await getPublicSiteContent();
+  } catch {
+    siteContent = null;
+  }
+  return <HomeClient siteContent={siteContent} />;
 }
