@@ -29,8 +29,22 @@ function prismaDelegateShapeOk(client: PrismaClient): boolean {
  * without new models or fields. Recreate when delegates are missing or the cache key mismatches.
  */
 function createPrismaClient() {
-  const url = process.env.DATABASE_URL ?? "file:./dev.db";
-  const adapter = new PrismaBetterSqlite3({ url });
+  const url = process.env.DATABASE_URL;
+  const isProd = process.env.NODE_ENV === "production";
+
+  if (isProd) {
+    if (!url) {
+      throw new Error("DATABASE_URL is required in production.");
+    }
+    return new PrismaClient({
+      datasources: {
+        db: { url },
+      },
+    });
+  }
+
+  const devUrl = url ?? "file:./dev.db";
+  const adapter = new PrismaBetterSqlite3({ url: devUrl });
   return new PrismaClient({ adapter });
 }
 
