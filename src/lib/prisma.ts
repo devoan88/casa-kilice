@@ -46,13 +46,32 @@ function createPrismaClient() {
   return new PrismaClient({ adapter });
 }
 
-const cached = globalForPrisma.prisma;
-const cacheKeyOk = globalForPrisma.__prismaClientCacheKey === PRISMA_CLIENT_CACHE_KEY;
-export const prisma =
-  cached && cacheKeyOk && prismaDelegateShapeOk(cached) ? cached : createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-  globalForPrisma.__prismaClientCacheKey = PRISMA_CLIENT_CACHE_KEY;
+function resolvePrismaClient(): PrismaClient {
+  const cached = globalForPrisma.prisma;
+  const cacheKeyOk = globalForPrisma.__prismaClientCacheKey === PRISMA_CLIENT_CACHE_KEY;
+  if (cached && cacheKeyOk && prismaDelegateShapeOk(cached)) {
+    return cached;
+  }
+  const client = createPrismaClient();
+  if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = client;
+    globalForPrisma.__prismaClientCacheKey = PRISMA_CLIENT_CACHE_KEY;
+  }
+  return client;
 }
+
+/**
+ * Lazy client: importing this module must not throw when DATABASE_URL is missing (e.g. Vercel
+ * install/build before env is applied). First real delegate access creates the client.
+ */
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop: string | symbol) {
+    const client = resolvePrismaClient();
+    const value = Reflect.get(client, prop) as unknown;
+    if (typeof value === "function") {
+      return (value as (...args: unknown[]) => unknown).bind(client);
+    }
+    return value;
+  },
+});
 
