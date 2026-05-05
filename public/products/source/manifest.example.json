@@ -1,0 +1,12 @@
+{
+  "source": "your-board.jpg",
+  "crops": {
+    "light-powder.jpg": { "left": 0, "top": 0, "width": 1600, "height": 1200 },
+    "light-cream.jpg": { "left": 1600, "top": 0, "width": 1600, "height": 1200 },
+    "packaging.jpg": { "left": 0, "top": 1200, "width": 1600, "height": 1200 },
+    "bronzer-powder.jpg": { "left": 0, "top": 0, "width": 1600, "height": 1200 },
+    "bronzer-cream.jpg": { "left": 1600, "top": 0, "width": 1600, "height": 1200 },
+    "deep-powder.jpg": { "left": 0, "top": 0, "width": 1600, "height": 1200 },
+    "deep-cream.jpg": { "left": 1600, "top": 0, "width": 1600, "height": 1200 }
+  }
+}

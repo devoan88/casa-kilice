@@ -1,0 +1,648 @@
+@import "tailwindcss";
+
+/* Monochromatic matte sand — one continuous luxury surface (espresso type) */
+:root {
+  --sand: #dccfbf;
+  --sand-soft: #e8dfd4;
+  --sand-raised: #dfd3c7;
+  --sand-carved: #d0c4b5;
+  --sand-deeper: #c4b6a5;
+
+  --espresso: #3c3530;
+  --espresso-soft: color-mix(in srgb, var(--espresso) 72%, var(--sand) 28%);
+
+  /* Legacy names → sand system */
+  --base-nude: var(--sand-soft);
+  --surface-rose: var(--sand-raised);
+  --surface-lift: var(--sand-soft);
+  --mahogany: var(--espresso);
+  --oxblood: var(--espresso);
+  --champagne-gold: color-mix(in srgb, var(--espresso) 22%, var(--sand) 78%);
+
+  --tobacco-beige: var(--sand);
+  --card-beige: var(--sand-raised);
+  --chocolate: var(--espresso);
+  --burnt-orange: var(--espresso);
+  --soft-brass: color-mix(in srgb, var(--espresso) 18%, var(--sand) 82%);
+  --cream-warm: var(--sand-soft);
+  --cream-muted: color-mix(in srgb, var(--espresso) 35%, var(--sand) 65%);
+
+  --parchment: var(--sand);
+  --hermes: var(--espresso);
+  --gold: color-mix(in srgb, var(--espresso) 16%, var(--sand) 84%);
+  --gold-2: color-mix(in srgb, var(--espresso) 24%, var(--sand) 76%);
+  --black: #2a2520;
+
+  --background: var(--sand);
+  --foreground: var(--espresso);
+  --muted: color-mix(in srgb, var(--espresso) 48%, transparent);
+  --surface: var(--sand-raised);
+  --surface-strong: var(--sand-soft);
+  --champagne: var(--sand-carved);
+  --border: color-mix(in srgb, var(--espresso) 12%, transparent);
+
+  --accent: var(--espresso);
+  --accent-strong: color-mix(in srgb, var(--espresso) 88%, black 12%);
+  --accent-foreground: var(--sand-soft);
+
+  --champagne-soft: var(--sand-soft);
+  --on-dark: var(--sand-soft);
+  --on-dark-muted: color-mix(in srgb, var(--sand-soft) 72%, var(--espresso) 28%);
+
+  --shadow-liquid: rgba(60, 53, 48, 0.08);
+  --shadow-liquid-deep: rgba(60, 53, 48, 0.14);
+  --shadow-golden-hour: 0 28px 56px rgba(60, 53, 48, 0.1), 0 12px 28px rgba(60, 53, 48, 0.06);
+
+  --radius-organic: 36px;
+  --sade-ease: cubic-bezier(0.33, 1, 0.68, 1);
+  --sade-duration: 0.7s;
+
+  --bg-shift: 0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-border: var(--border);
+  --color-gold: var(--gold);
+  --color-black: var(--black);
+  --color-espresso: var(--espresso);
+  --color-parchment: var(--parchment);
+  --color-champagne-soft: var(--champagne-soft);
+  --color-hermes: var(--hermes);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-sand: var(--sand);
+  --color-sand-soft: var(--sand-soft);
+  --color-sand-raised: var(--sand-raised);
+  --color-sand-carved: var(--sand-carved);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-serif);
+}
+
+html {
+  scroll-behavior: smooth;
+  --font-display: var(--font-serif);
+}
+
+body {
+  letter-spacing: 0.055em;
+  color: var(--foreground);
+  background-color: var(--sand);
+  background-image:
+    radial-gradient(
+      ellipse 130% 85% at 50% -25%,
+      color-mix(in srgb, var(--sand-soft) 55%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 70% 50% at 100% 100%,
+      color-mix(in srgb, var(--sand-deeper) 18%, transparent),
+      transparent 50%
+    ),
+    color-mix(
+      in srgb,
+      var(--sand) calc(100% - (var(--bg-shift) * 5%)),
+      var(--sand-raised) calc(var(--bg-shift) * 5%)
+    );
+}
+
+html.lang-ka body {
+  font-family: var(--font-georgian), var(--font-sans), system-ui, sans-serif;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--espresso) 22%, var(--sand-soft));
+  color: var(--espresso);
+}
+
+/* Intimate display type — tight tracking (matches Tailwind arbitrary font class) */
+[class*="var(--font-display)"] {
+  letter-spacing: -0.02em;
+}
+
+/* Warm footer / lounge panel (not noir leather) */
+.ck-leather {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(
+    185deg,
+    color-mix(in srgb, var(--sand-carved) 92%, var(--espresso) 4%) 0%,
+    color-mix(in srgb, var(--sand) 96%, var(--espresso) 2%) 100%
+  );
+  color: var(--foreground);
+  border-top: 1px solid color-mix(in srgb, var(--espresso) 10%, transparent);
+}
+.ck-leather::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.035;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+.ck-leather > * {
+  position: relative;
+  z-index: 1;
+}
+
+.ck-leather .ck-on-dark-muted {
+  color: var(--muted);
+}
+
+.ck-leather .ck-btn-luxury {
+  color: var(--foreground);
+  border-color: color-mix(in srgb, var(--champagne-gold) 55%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-lift) 96%, var(--base-nude) 4%) 0%,
+    var(--surface-rose) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 55%, var(--champagne-gold) 45%),
+    inset 0 -2px 0 rgba(45, 27, 27, 0.05),
+    0 6px 0 rgba(45, 27, 27, 0.04),
+    0 20px 44px var(--shadow-liquid);
+}
+.ck-leather .ck-btn-luxury:hover {
+  color: var(--espresso);
+  border-color: color-mix(in srgb, var(--espresso) 18%, var(--sand-soft) 82%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 252, 250, 0.4),
+    0 0 0 1px rgba(60, 53, 48, 0.06),
+    0 24px 48px rgba(60, 53, 48, 0.08);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Primary CTA — deep espresso on sand */
+.ck-metallic {
+  position: relative;
+  overflow: hidden;
+  color: var(--accent-foreground);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  background: linear-gradient(
+    158deg,
+    color-mix(in srgb, var(--espresso) 92%, black 8%) 0%,
+    var(--espresso) 48%,
+    color-mix(in srgb, var(--espresso) 78%, var(--sand-deeper) 22%) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--espresso) 70%, black 30%);
+  border-radius: 9999px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 245, 0.12),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.18),
+    0 8px 0 rgba(60, 53, 48, 0.1),
+    var(--shadow-golden-hour);
+  transition:
+    box-shadow var(--sade-duration) var(--sade-ease),
+    transform var(--sade-duration) var(--sade-ease),
+    filter var(--sade-duration) var(--sade-ease),
+    border-color var(--sade-duration) var(--sade-ease);
+}
+.ck-metallic::after {
+  content: "";
+  position: absolute;
+  inset: -25% -45%;
+  background: linear-gradient(
+    105deg,
+    transparent 36%,
+    rgba(255, 248, 242, 0.1) 48%,
+    rgba(255, 250, 246, 0.16) 50%,
+    rgba(255, 248, 242, 0.08) 54%,
+    transparent 64%
+  );
+  opacity: 0.35;
+  transform: translateX(-14%) skewX(-11deg);
+  pointer-events: none;
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+.ck-metallic:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 245, 0.16),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(60, 53, 48, 0.08),
+    0 22px 52px rgba(60, 53, 48, 0.14);
+  transform: translateY(-3px);
+  filter: brightness(1.04);
+}
+.ck-metallic:hover::after {
+  opacity: 0.5;
+  transform: translateX(10%) skewX(-11deg);
+}
+.ck-metallic:active {
+  transform: translateY(0);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.2),
+    0 3px 0 rgba(60, 53, 48, 0.08);
+  transition-duration: 0.15s;
+}
+
+.ck-btn-luxury {
+  letter-spacing: 0.26em;
+  position: relative;
+  color: var(--foreground);
+  border: 1px solid color-mix(in srgb, var(--champagne-gold) 65%, transparent);
+  border-radius: 9999px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-lift) 96%, var(--base-nude) 4%) 0%,
+    var(--surface-rose) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 252, 250, 0.75),
+    inset 0 -2px 0 rgba(45, 27, 27, 0.04),
+    0 6px 0 rgba(45, 27, 27, 0.04),
+    0 22px 48px var(--shadow-liquid);
+  transition:
+    box-shadow var(--sade-duration) var(--sade-ease),
+    border-color var(--sade-duration) var(--sade-ease),
+    transform var(--sade-duration) var(--sade-ease),
+    background var(--sade-duration) var(--sade-ease),
+    color var(--sade-duration) var(--sade-ease);
+}
+.ck-btn-luxury:hover {
+  border-color: color-mix(in srgb, var(--espresso) 22%, var(--sand-soft) 78%);
+  color: var(--espresso);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 252, 250, 0.45),
+    0 0 0 1px rgba(60, 53, 48, 0.06),
+    0 26px 52px rgba(60, 53, 48, 0.1);
+  transform: translateY(-2px);
+}
+
+.ck-latin-motto {
+  font-family: var(--font-serif), ui-serif, Georgia, serif;
+  font-size: 0.6875rem;
+  font-style: italic;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--espresso) 58%, var(--sand-deeper) 42%);
+}
+
+.ck-sade-whisper {
+  font-family: var(--font-serif), ui-serif, Georgia, serif;
+  font-size: 0.75rem;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--espresso) 62%, var(--sand-deeper) 38%);
+}
+
+.ck-hero-warm {
+  background-image: radial-gradient(
+    ellipse 100% 70% at 50% 0%,
+    color-mix(in srgb, var(--sand-soft) 45%, transparent),
+    transparent 55%
+  );
+}
+
+/* Flush: warm touch reaction */
+.ck-sade-touch {
+  transition:
+    box-shadow var(--sade-duration) var(--sade-ease),
+    transform var(--sade-duration) var(--sade-ease),
+    border-color var(--sade-duration) var(--sade-ease);
+}
+.ck-sade-touch:hover {
+  box-shadow: 0 0 0 1px rgba(60, 53, 48, 0.06), var(--shadow-golden-hour);
+  transform: translateY(-2px);
+}
+
+/* Wet glass / gloss on product imagery */
+.ck-gloss-hover {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-organic);
+}
+.ck-gloss-hover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    125deg,
+    transparent 0%,
+    color-mix(in srgb, white 22%, var(--champagne-gold) 78%) 42%,
+    rgba(255, 252, 250, 0.35) 48%,
+    transparent 58%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.75s var(--sade-ease);
+  mix-blend-mode: soft-light;
+}
+.ck-gloss-hover:hover::after {
+  opacity: 0.85;
+}
+
+.ck-site-grain {
+  opacity: 0.028;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.65'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 220px 220px;
+}
+
+@keyframes ck-glimmer-float {
+  0%,
+  100% {
+    opacity: 0.14;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    opacity: 0.68;
+    transform: translate3d(0, -14px, 0) scale(1.35);
+  }
+}
+
+.ck-glimmer-dot {
+  animation-name: ck-glimmer-float;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes ck-glimmer-sheen-move {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: translate3d(-4%, 0, 0);
+  }
+  50% {
+    opacity: 0.46;
+    transform: translate3d(4%, 0, 0);
+  }
+}
+
+.ck-glimmer-sheen {
+  background: radial-gradient(
+    ellipse 85% 55% at 50% 38%,
+    color-mix(in srgb, var(--sand-soft) 35%, transparent),
+    transparent 72%
+  );
+  animation: ck-glimmer-sheen-move 18s ease-in-out infinite;
+}
+
+.ck-img {
+  border-radius: var(--radius-organic);
+}
+
+/* High-end studio render treatment — soft fill light, no visual noise */
+.ck-studio-render {
+  position: relative;
+  isolation: isolate;
+  border-radius: clamp(1.25rem, 3vw, 1.75rem);
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 120px rgba(255, 252, 248, 0.2),
+    inset 0 -40px 80px rgba(60, 53, 48, 0.04),
+    0 36px 100px rgba(60, 53, 48, 0.09),
+    0 1px 0 rgba(255, 252, 248, 0.45);
+}
+.ck-studio-render img {
+  filter: contrast(1.06) saturate(0.94) brightness(1.03);
+  transform: translateZ(0);
+}
+
+/* Home hero product windows — no 3D tilt (avoids overflow clip on parents). */
+.ck-product-window__frame {
+  box-shadow:
+    inset 0 0 72px rgba(255, 252, 248, 0.55),
+    0 28px 64px rgba(45, 27, 27, 0.1);
+}
+.ck-product-window__frame img {
+  filter: contrast(1.05) saturate(0.96) brightness(1.02);
+}
+
+/* Dual-texture hero — powder dust trail + cream liquid sheen */
+@keyframes dual-powder-dust-fade {
+  0% {
+    opacity: 0.72;
+    transform: translate3d(-50%, -50%, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-50%, -58%, 0) scale(0.22);
+  }
+}
+
+.dual-powder-dust-particle {
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, #c9a780 52%, #f5ebe0 48%);
+  box-shadow:
+    0 0 4px color-mix(in srgb, #c9a780 50%, transparent),
+    0 0 9px color-mix(in srgb, #c9a780 28%, transparent);
+  animation: dual-powder-dust-fade 0.88s ease-out forwards;
+}
+
+/* Powder “window” + softer type while powder is hovered (dual hero) */
+.ck-powder-product-window {
+  border-radius: 1.5rem;
+  padding: 0.65rem 0.85rem 0.35rem;
+  background: color-mix(in srgb, var(--sand) 42%, transparent);
+  box-shadow:
+    inset 0 2px 18px rgba(32, 20, 12, 0.07),
+    inset 0 -12px 26px rgba(48, 30, 18, 0.05),
+    inset 0 0 0 1px rgba(42, 28, 20, 0.05);
+}
+
+@keyframes dual-cream-liquid-sheen {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1.05);
+  }
+}
+
+.dual-cream-liquid-sheen {
+  animation: dual-cream-liquid-sheen 2.75s linear infinite;
+  will-change: transform;
+}
+
+/* ============================================================
+   VisionOS Spatial Design System — 2030
+   ============================================================ */
+:root {
+  /* depth tokens */
+  --void: #050403;
+  --void-elevated: #0f0d0c;
+  --neon-amber: #e8c066;
+  --glass-void: color-mix(in srgb, var(--void-elevated) 82%, rgba(255, 255, 255, 0.03));
+
+  /* VisionOS glass surfaces */
+  --vision-glass-bg: rgba(18, 16, 14, 0.72);
+  --vision-glass-border: rgba(255, 255, 255, 0.09);
+  --vision-glass-inner: rgba(255, 255, 255, 0.055);
+  --vision-shadow-ambient: 0 48px 120px rgba(0, 0, 0, 0.65), 0 12px 40px rgba(0, 0, 0, 0.45);
+  --vision-shadow-glow: 0 0 0 1px rgba(232, 196, 92, 0.18), 0 0 40px rgba(232, 196, 92, 0.08);
+
+  /* spatial depth perspective */
+  --vision-perspective: 1400px;
+}
+
+/* --- Base VisionOS glass (thick frosted panel like AVP windows) --- */
+.ck-glass-void {
+  backdrop-filter: blur(40px) saturate(1.4) brightness(0.92);
+  -webkit-backdrop-filter: blur(40px) saturate(1.4) brightness(0.92);
+  background: var(--vision-glass-bg);
+  border-color: var(--vision-glass-border);
+  box-shadow: var(--vision-shadow-ambient);
+}
+
+/* White inner edge — the 'physical glass' specular highlight */
+.ck-spatial-panel {
+  backdrop-filter: blur(44px) saturate(1.5) brightness(0.88);
+  -webkit-backdrop-filter: blur(44px) saturate(1.5) brightness(0.88);
+  background: linear-gradient(
+    145deg,
+    rgba(28, 25, 22, 0.82) 0%,
+    rgba(14, 12, 10, 0.78) 60%,
+    rgba(22, 19, 16, 0.80) 100%
+  );
+  border: 1px solid var(--vision-glass-border);
+  /* inner white highlight = the physical glass edge */
+  box-shadow:
+    inset 0 1px 0 var(--vision-glass-inner),
+    inset 1px 0 0 rgba(255, 255, 255, 0.03),
+    var(--vision-shadow-ambient),
+    var(--vision-shadow-glow);
+}
+
+/* Eye-tracking hover: element pops toward user + glows */
+.ck-eye-hover {
+  transition:
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.4s ease;
+  transform-style: preserve-3d;
+  will-change: transform, box-shadow;
+}
+
+.ck-eye-hover:hover,
+.ck-eye-hover:focus-visible {
+  transform: scale(1.032) translateZ(16px) translateY(-4px);
+  box-shadow:
+    0 0 0 1px rgba(232, 196, 92, 0.32),
+    0 24px 72px rgba(0, 0, 0, 0.55),
+    0 0 48px rgba(232, 196, 92, 0.11);
+  filter: brightness(1.06);
+}
+
+/* Depth float: multiple layers at different Z */
+.ck-depth-1 { transform: translateZ(0px);  }
+.ck-depth-2 { transform: translateZ(24px); }
+.ck-depth-3 { transform: translateZ(48px); }
+.ck-depth-4 { transform: translateZ(72px); }
+
+/* Holographic shimmer sweep on cards */
+@keyframes ck-holo-sweep {
+  0%   { background-position: -200% center; }
+  100% { background-position: 220% center; }
+}
+
+.ck-holo-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(232, 196, 92, 0.08) 45%,
+    rgba(255, 245, 200, 0.14) 50%,
+    rgba(232, 196, 92, 0.08) 55%,
+    transparent 70%
+  );
+  background-size: 300% 100%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  animation: ck-holo-sweep 2.2s linear infinite paused;
+}
+
+.ck-holo-sheen:hover::after {
+  opacity: 1;
+  animation-play-state: running;
+}
+
+.ck-float-3d {
+  transform-style: preserve-3d;
+  transition:
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ck-float-3d:hover {
+  transform: translateY(-10px) translateZ(12px) rotateX(2deg);
+  box-shadow:
+    0 40px 90px rgba(0, 0, 0, 0.18),
+    0 0 0 1px color-mix(in srgb, var(--neon-amber) 22%, transparent);
+}
+
+/* Magnetic button — pair with Framer motion spring on x/y */
+.ck-magnetic {
+  position: relative;
+  transition:
+    box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.3s ease;
+  will-change: transform;
+}
+
+.ck-magnetic:hover {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--neon-amber) 40%, transparent),
+    0 8px 28px rgba(232, 196, 92, 0.14);
+}
+
+/* Scan-dim: overlay the viewport except the scanner element (applied to body) */
+.ck-scan-dim-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  background: rgba(5, 4, 3, 0.72);
+  pointer-events: none;
+}
+
+/* Glowing neon-gold badge / tag */
+.ck-neon-tag {
+  border: 1px solid color-mix(in srgb, var(--neon-amber) 35%, transparent);
+  background: color-mix(in srgb, var(--neon-amber) 08%, transparent);
+  color: color-mix(in srgb, var(--neon-amber) 90%, #fff);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 3px 10px;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--neon-amber) 12%, transparent);
+}
+
+/*
+ * Framer `useScroll({ target })` defaults `container` to `document.scrollingElement`
+ * (usually `<html>`, sometimes `<body>`). That element must not be `position: static`
+ * or motion warns. Tailwind preflight can load after earlier rules — keep this block last.
+ */
+html,
+body {
+  position: relative;
+}
+
