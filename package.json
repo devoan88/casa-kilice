@@ -19,7 +19,7 @@
     "build": "node scripts/run-next-cli.cjs build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "npm rebuild better-sqlite3 && prisma generate",
+    "postinstall": "prisma generate",
     "rebuild:native": "npm rebuild better-sqlite3",
     "fix:native": "npm rebuild better-sqlite3 && node -e \"require('fs').rmSync('.next',{recursive:true,force:true,maxRetries:8,retryDelay:150}); console.log('removed .next')\"",
     "crop-products": "node scripts/crop-product-photos.mjs",
@@ -27,7 +27,9 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
+    "@neondatabase/serverless": "1.1.0",
     "@prisma/adapter-better-sqlite3": "^7.8.0",
+    "@prisma/adapter-neon": "7.8.0",
     "@prisma/client": "^7.8.0",
     "@react-three/drei": "10.7.7",
     "@react-three/fiber": "9.6.1",

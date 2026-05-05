@@ -1,5 +1,7 @@
 import { PrismaClient } from "@/generated/prisma";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { Pool } from "@neondatabase/serverless";
+import { PrismaNeon } from "@prisma/adapter-neon";
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
@@ -36,11 +38,9 @@ function createPrismaClient() {
     if (!url) {
       throw new Error("DATABASE_URL is required in production.");
     }
-    return new PrismaClient({
-      datasources: {
-        db: { url },
-      },
-    });
+    const pool = new Pool({ connectionString: url });
+    const adapter = new PrismaNeon(pool);
+    return new PrismaClient({ adapter });
   }
 
   const devUrl = url ?? "file:./dev.db";
