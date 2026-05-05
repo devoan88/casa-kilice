@@ -43,41 +43,34 @@ function prismaDelegateShapeOk(client: PrismaClient): boolean {
 }
 
 /**
- * After `prisma generate`, the dev server can still hold an older PrismaClient on `globalThis`
- * without new models or fields. Recreate when delegates are missing or the cache key mismatches.
+ * Never throws: on failure logs DEBUG ERROR and returns null so importing this module cannot
+ * crash the Node process during initialization.
  */
-function createPrismaClient() {
-  const url = process.env.DATABASE_URL;
-  const provider = process.env.PRISMA_PROVIDER ?? (process.env.NODE_ENV === "production" ? "postgres" : "sqlite");
+function createPrismaClient(): PrismaClient | null {
+  try {
+    const url = process.env.DATABASE_URL;
+    const provider = process.env.PRISMA_PROVIDER ?? (process.env.NODE_ENV === "production" ? "postgres" : "sqlite");
 
-  if (provider === "sqlite") {
-    console.log("DEBUG: Database connecting... (sqlite)");
-    try {
+    if (provider === "sqlite") {
+      console.log("DEBUG: Database connecting... (sqlite)");
       const sqliteUrl = url ?? "file:./dev.db";
       const adapter = new PrismaBetterSqlite3({ url: sqliteUrl });
       return new PrismaClient({ adapter });
-    } catch (error) {
-      console.error("DEBUG ERROR:", error);
-      throw error;
     }
-  }
 
-  if (!url) {
-    const err = new Error("DATABASE_URL is required for Postgres deployments.");
-    console.error("DEBUG ERROR:", err);
-    throw err;
-  }
+    if (!url) {
+      console.error("DEBUG ERROR:", new Error("DATABASE_URL is required for Postgres deployments."));
+      return null;
+    }
 
-  console.log("DEBUG: Database connecting... (postgres)", {
-    vercel: process.env.VERCEL === "1",
-    provider,
-    hasUrl: true,
-  });
+    console.log("DEBUG: Database connecting... (postgres)", {
+      vercel: process.env.VERCEL === "1",
+      provider,
+      hasUrl: true,
+    });
 
-  try {
     const onVercel = process.env.VERCEL === "1";
     if (onVercel) {
-      // Pool queries over HTTP avoid WebSocket/TLS issues that can hang or time out on serverless.
       neonConfig.poolQueryViaFetch = true;
     }
 
@@ -104,31 +97,44 @@ function createPrismaClient() {
     return new PrismaClient({ adapter });
   } catch (error) {
     console.error("DEBUG ERROR:", error);
-    throw error;
+    return null;
   }
 }
 
-function resolvePrismaClient(): PrismaClient {
-  const cached = globalForPrisma.prisma;
-  const cacheKeyOk = globalForPrisma.__prismaClientCacheKey === PRISMA_CLIENT_CACHE_KEY;
-  if (cached && cacheKeyOk && prismaDelegateShapeOk(cached)) {
-    return cached;
+function resolvePrismaClient(): PrismaClient | null {
+  try {
+    const cached = globalForPrisma.prisma;
+    const cacheKeyOk = globalForPrisma.__prismaClientCacheKey === PRISMA_CLIENT_CACHE_KEY;
+    if (cached && cacheKeyOk && prismaDelegateShapeOk(cached)) {
+      return cached;
+    }
+    const client = createPrismaClient();
+    if (!client) {
+      return null;
+    }
+    if (process.env.NODE_ENV !== "production") {
+      globalForPrisma.prisma = client;
+      globalForPrisma.__prismaClientCacheKey = PRISMA_CLIENT_CACHE_KEY;
+    }
+    return client;
+  } catch (error) {
+    console.error("DEBUG ERROR:", error);
+    return null;
   }
-  const client = createPrismaClient();
-  if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = client;
-    globalForPrisma.__prismaClientCacheKey = PRISMA_CLIENT_CACHE_KEY;
-  }
-  return client;
 }
 
 /**
- * Lazy client: importing this module must not throw when DATABASE_URL is missing (e.g. Vercel
- * install/build before env is applied). First real delegate access creates the client.
+ * Lazy client: first access resolves the real client. If init failed, delegates throw a clear error
+ * (HTTP request fails, but the worker process keeps running).
  */
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, prop: string | symbol) {
     const client = resolvePrismaClient();
+    if (!client) {
+      const msg = "Prisma client unavailable (init failed — search logs for DEBUG ERROR)";
+      console.error("DEBUG ERROR:", msg, String(prop));
+      throw new Error(msg);
+    }
     const value = Reflect.get(client, prop) as unknown;
     if (typeof value === "function") {
       return (value as (...args: unknown[]) => unknown).bind(client);
@@ -136,4 +142,3 @@ export const prisma = new Proxy({} as PrismaClient, {
     return value;
   },
 });
-
