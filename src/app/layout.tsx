@@ -110,7 +110,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let showAdminFooterLink = false;
-  const isStaticPreview = process.env.DEPLOY_TARGET === "github-pages";
+  const isStaticPreview =
+    process.env.DEPLOY_TARGET === "github-pages" && process.env.VERCEL !== "1";
   if (!isStaticPreview) {
     try {
       const session = await getServerSession(authOptions);
