@@ -5,14 +5,23 @@ import type { NextConfig } from "next";
 
 /** Stabilises Turbopack when `npm run dev` is started from the parent `ანი/` folder (two lockfiles). */
 const turbopackRoot = path.dirname(fileURLToPath(import.meta.url));
+const isGithubPages = process.env.DEPLOY_TARGET === "github-pages";
 
 const nextConfig: NextConfig = {
   turbopack: {
     root: turbopackRoot,
   },
+  ...(isGithubPages
+    ? {
+        output: "export",
+        basePath: "/casa-kilice",
+        assetPrefix: "/casa-kilice/",
+      }
+    : {}),
   images: {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    ...(isGithubPages ? { unoptimized: true } : {}),
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       /* Editorial RSS hero images (Vogue, Harper’s Bazaar, L’Officiel USA, WordPress CDNs, etc.) */
