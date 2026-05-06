@@ -63,9 +63,17 @@ function createPrismaClient() {
   }
 
   if (!url) {
-    const err = new Error("DATABASE_URL is required for Postgres deployments.");
-    console.error("DEBUG ERROR:", err);
-    throw err;
+    // Emergency stability: on misconfigured deployments (Preview/incorrect project/env),
+    // don't crash the whole app. Fall back to ephemeral sqlite so pages can render.
+    console.error("DEBUG ERROR:", new Error("DATABASE_URL is missing in Postgres mode; falling back to sqlite."));
+    try {
+      const adapter = new PrismaBetterSqlite3({ url: "file:./dev.db" });
+      return new PrismaClient({ adapter });
+    } catch (error) {
+      console.error("DEBUG ERROR:", error);
+      // Keep the original behavior if fallback fails.
+      throw new Error("DATABASE_URL is required for Postgres deployments.");
+    }
   }
 
   console.log("DEBUG: Database connecting... (postgres)", {
