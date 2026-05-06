@@ -7,7 +7,7 @@
   },
   "scripts": {
     "predev": "node scripts/predev-bootstrap.cjs",
-    "prebuild": "node scripts/predev-bootstrap.cjs",
+    "prebuild": "node scripts/predev-bootstrap.cjs && prisma generate",
     "check:env": "node scripts/check-dev-environment.cjs",
     "db:backup": "node scripts/backup-dev-db.cjs",
     "backup:daily": "node scripts/daily-backup.cjs",

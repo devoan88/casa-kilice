@@ -47,8 +47,9 @@ function prismaDelegateShapeOk(client: PrismaClient): boolean {
  * without new models or fields. Recreate when delegates are missing or the cache key mismatches.
  */
 function createPrismaClient() {
-  const url = process.env.DATABASE_URL;
   const provider = process.env.PRISMA_PROVIDER ?? (process.env.NODE_ENV === "production" ? "postgres" : "sqlite");
+  // Only check env at init time (lazy), never at module load.
+  const url = process.env.DATABASE_URL;
 
   if (provider === "sqlite") {
     console.log("DEBUG: Database connecting... (sqlite)");
@@ -61,6 +62,8 @@ function createPrismaClient() {
       throw error;
     }
   }
+
+  console.log("Database URL present:", Boolean(url));
 
   if (!url) {
     // Emergency stability: on misconfigured deployments (Preview/incorrect project/env),
