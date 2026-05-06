@@ -52,3 +52,6 @@ next-env.d.ts
 
 # Muse pending uploads (local disk; never commit binaries)
 /storage/
+
+.vercel
+.env*.local

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Info } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { BeautyConcierge } from "@/components/quiet/BeautyConcierge";
 import { HomeInfoPanel } from "@/components/home/HomeInfoPanel";
@@ -16,6 +16,10 @@ import { useI18n } from "@/i18n/LanguageProvider";
 export function HomeClient({ siteContent }: { siteContent: PublicSiteContent | null }) {
   const { t } = useI18n();
   const [infoOpen, setInfoOpen] = useState(false);
+
+  useEffect(() => {
+    console.log("[home] client mounted", { hasContent: Boolean(siteContent) });
+  }, [siteContent]);
 
   return (
     <>
