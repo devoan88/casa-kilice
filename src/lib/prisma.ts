@@ -123,10 +123,10 @@ function resolvePrismaClient(): PrismaClient {
     return cached;
   }
   const client = createPrismaClient();
-  if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = client;
-    globalForPrisma.__prismaClientCacheKey = PRISMA_CLIENT_CACHE_KEY;
-  }
+  // Lazy-loading singleton: cache the first successfully created client on globalThis
+  // (Vercel may reuse the same runtime between requests).
+  globalForPrisma.prisma = client;
+  globalForPrisma.__prismaClientCacheKey = PRISMA_CLIENT_CACHE_KEY;
   return client;
 }
 
