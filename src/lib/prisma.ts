@@ -23,7 +23,7 @@ function ensureConnParam(connectionString: string, key: string, value: string): 
 function normalizePostgresAdapterUrl(raw: string): string {
   let url = raw.trim();
   url = ensureConnParam(url, "sslmode", "require");
-  url = ensureConnParam(url, "connect_timeout", "60");
+  url = ensureConnParam(url, "connect_timeout", "30");
   return url;
 }
 
@@ -85,7 +85,7 @@ function createPrismaClient() {
     const adapter = new PrismaNeon(
       {
         connectionString,
-        connectionTimeoutMillis: 60_000,
+        connectionTimeoutMillis: 30_000,
         max: onVercel ? 1 : 10,
         idleTimeoutMillis: onVercel ? 10_000 : 30_000,
         allowExitOnIdle: onVercel,

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Cormorant_Garamond, Inter, Noto_Serif_Georgian } from "next/font/google";
-import { getServerSession } from "next-auth/next";
 import "./globals.css";
 
 import { Providers } from "@/components/Providers";
@@ -19,8 +18,6 @@ import { MainSegmentErrorBoundary } from "@/components/safety/MainSegmentErrorBo
 import { VisitorTracker } from "@/components/VisitorTracker";
 import { DigitalAtmosphere } from "@/components/portal/DigitalAtmosphere";
 import { VisionGlow } from "@/components/portal/VisionGlow";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { LOCALE_STORAGE, LOCALES, type Locale } from "@/i18n/types";
 
 /** Neon's driver and Prisma adapters require Node; avoid accidental Edge bundling. */
@@ -125,24 +122,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  let showAdminFooterLink = false;
-  const isStaticPreview =
-    process.env.DEPLOY_TARGET === "github-pages" &&
-    process.env.GITHUB_ACTIONS === "true";
-  if (!isStaticPreview) {
-    try {
-      const session = await getServerSession(authOptions);
-      if (session?.user?.id) {
-        const row = await prisma.user.findUnique({
-          where: { id: session.user.id },
-          select: { role: true },
-        });
-        showAdminFooterLink = row?.role === "ADMIN";
-      }
-    } catch {
-      showAdminFooterLink = false;
-    }
-  }
+  // EMERGENCY STABILITY MODE (Vercel 500 triage):
+  // Do not hit session/database in the root layout. This keeps first paint stable.
+  const showAdminFooterLink = false;
 
   const cookieLocale = (await cookies()).get(LOCALE_STORAGE)?.value;
   const initialLocale: Locale =

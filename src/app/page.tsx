@@ -1,6 +1,8 @@
 import { HomeClient } from "@/app/HomeClient";
 import { getPublicSiteContent } from "@/lib/siteContent";
 
+export const runtime = "nodejs";
+
 export default async function Home() {
   let siteContent = null;
   try {
