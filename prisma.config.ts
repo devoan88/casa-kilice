@@ -12,6 +12,12 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // Vercel Postgres / Neon integrations often provide POSTGRES_* vars even when DATABASE_URL
+    // wasn't added manually. Prefer DATABASE_URL, then fall back to common Vercel keys.
+    url:
+      process.env["DATABASE_URL"] ??
+      process.env["POSTGRES_PRISMA_URL"] ??
+      process.env["POSTGRES_URL_NON_POOLING"] ??
+      process.env["POSTGRES_URL"],
   },
 });
