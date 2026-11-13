@@ -1,23 +1,15 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { Cormorant_Garamond, Inter, Noto_Serif_Georgian } from "next/font/google";
+import { Cormorant_Garamond, Noto_Sans_Georgian, Noto_Serif_Georgian } from "next/font/google";
 import "./globals.css";
 
 import { Providers } from "@/components/Providers";
 import { CartProvider } from "@/components/cart/CartProvider";
-import { MoodProvider } from "@/components/future/MoodProvider";
-import { MoodOverlay } from "@/components/future/MoodOverlay";
-import { MoodSelector } from "@/components/future/MoodSelector";
-import { VoiceRing } from "@/components/future/VoiceRing";
-import { BreatheGlowIntro } from "@/components/future/BreatheGlowIntro";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
-import { QuietHeader } from "@/components/quiet/QuietHeader";
-import { QuietFooter } from "@/components/quiet/QuietFooter";
-import { QuietFooterSecondaryNav } from "@/components/quiet/QuietFooterSecondaryNav";
+import { BrandFooter } from "@/components/brand/BrandFooter";
+import { BrandHeader } from "@/components/brand/BrandHeader";
 import { MainSegmentErrorBoundary } from "@/components/safety/MainSegmentErrorBoundary";
 import { VisitorTracker } from "@/components/VisitorTracker";
-import { DigitalAtmosphere } from "@/components/portal/DigitalAtmosphere";
-import { VisionGlow } from "@/components/portal/VisionGlow";
 import { LOCALE_STORAGE, LOCALES, type Locale } from "@/i18n/types";
 
 /** Neon's driver and Prisma adapters require Node; avoid accidental Edge bundling. */
@@ -36,9 +28,9 @@ function metadataBaseUrl(): URL {
   return new URL("http://localhost:3000");
 }
 
-const sans = Inter({
+const sans = Noto_Sans_Georgian({
   variable: "--font-sans",
-  subsets: ["latin"],
+  subsets: ["georgian", "latin"],
   display: "swap",
 });
 
@@ -59,31 +51,23 @@ const georgian = Noto_Serif_Georgian({
 export const metadata: Metadata = {
   metadataBase: metadataBaseUrl(),
   title: {
-    default: "Casa Kilicé - The World's First AI Skin Innovation",
+    default: "Casa Kilicé — კრემისებრი ნათების წვეთი",
     template: "%s · Casa Kilicé",
   },
   description:
-    "Ultra-modern Skin Scan (სკინ სკანირება): vision analysis, wellness passport, Casa Kilicé rituals, and partner API from $49 / $149 / $499 — quiet luxury cosmetics.",
-  keywords: [
-    "AI Skin Scan",
-    "Personalized Vitamin Guide",
-    "Virtual Makeup Artist API",
-    "Skin Health Algorithm",
-    "Casa Kilicé",
-    "AI wellness",
-  ],
+    "კოსმეტიკა საქართველოსთვის. კრემისებრი ნათების წვეთი ერევა ნებისმიერ ტონალურ კრემში, ანათებს და ატენიანებს სახეს.",
+  keywords: ["Casa Kilicé", "კოსმეტიკა", "ნათების წვეთი", "ტონალური კრემი", "საქართველო"],
   openGraph: {
-    title: "Casa Kilicé - The World's First AI Skin Innovation",
-    description:
-      "Vision-guided skin analysis, holistic wellness modules, and partner API — Casa Kilicé.",
+    title: "Casa Kilicé — კრემისებრი ნათების წვეთი",
+    description: "რამდენიმე წვეთი ნებისმიერ ტონალურში. ანათებს და ატენიანებს, ტონს არ ცვლის.",
     type: "website",
-    images: [{ url: "/og.svg", width: 1200, height: 630, alt: "Casa Kilicé - The World's First AI Skin Innovation" }],
+    locale: "ka_GE",
+    images: [{ url: "/og.svg", width: 1200, height: 630, alt: "Casa Kilicé" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Casa Kilicé - The World's First AI Skin Innovation",
-    description:
-      "Vision-guided skin analysis, holistic wellness modules, and partner API — Casa Kilicé.",
+    title: "Casa Kilicé — კრემისებრი ნათების წვეთი",
+    description: "რამდენიმე წვეთი ნებისმიერ ტონალურში. ანათებს და ატენიანებს, ტონს არ ცვლის.",
     images: ["/og.svg"],
   },
 };
@@ -97,22 +81,14 @@ const siteJsonLd = {
       "@type": "Organization",
       name: "Casa Kilicé",
       ...(siteOrigin ? { url: siteOrigin } : {}),
-      description:
-        "Luxury cosmetics maison with AI-powered skin scan (სკინ სკანირება), digital wellness passport, and B2B wellness API.",
+      description: "კოსმეტიკის სახლი საქართველოსთვის. პირველი პროდუქტი კრემისებრი ნათების წვეთია.",
     },
     {
-      "@type": "SoftwareApplication",
-      name: "Casa Kilicé Skin Scan",
-      applicationCategory: "HealthApplication",
-      operatingSystem: "Web",
+      "@type": "Product",
+      name: "კრემისებრი ნათების წვეთი",
+      brand: "Casa Kilicé",
       description:
-        "Vision AI for undertone, gender-aware protocols, wellness passport (vitamins, sleep, lifestyle), and Casa Kilicé ritual mapping.",
-      offers: {
-        "@type": "Offer",
-        price: "0",
-        priceCurrency: "USD",
-        description: "Consumer scan; partner API billed separately.",
-      },
+        "კრემისებრი წვეთი, რომელიც ერევა ნებისმიერ ტონალურ კრემში, ანათებს და ატენიანებს სახეს. ფასი ჯერ არ არის გამოცხადებული.",
     },
   ],
 };
@@ -122,20 +98,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // EMERGENCY STABILITY MODE (Vercel 500 triage):
-  // Do not hit session/database in the root layout. This keeps first paint stable.
-  const showAdminFooterLink = false;
-
   const cookieLocale = (await cookies()).get(LOCALE_STORAGE)?.value;
   const initialLocale: Locale =
     cookieLocale && (LOCALES as readonly string[]).includes(cookieLocale) ? (cookieLocale as Locale) : "en";
 
   return (
     <html
-      lang="en"
+      lang="ka"
       data-scroll-behavior="smooth"
-      data-ck-era="2030"
-      className={`${sans.variable} ${display.variable} ${georgian.variable} lang-en h-full scroll-smooth`}
+      className={`${sans.variable} ${display.variable} ${georgian.variable} h-full scroll-smooth`}
     >
       <body className="min-h-full overflow-x-hidden bg-background font-sans text-foreground antialiased">
         <script
@@ -143,30 +114,18 @@ export default async function RootLayout({
           // eslint-disable-next-line react/no-danger -- global SEO graph
           dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
         />
-        <DigitalAtmosphere />
-        <VisionGlow />
-        <div className="ck-site-grain pointer-events-none fixed inset-0 z-[1]" aria-hidden />
         <GoogleAnalytics />
         <Providers initialLocale={initialLocale}>
           <VisitorTracker />
-          <MoodProvider>
-            {/* Full-screen intro caused Strict Mode / storage edge cases in dev; keep for production only. */}
-            {process.env.NODE_ENV === "production" ? <BreatheGlowIntro /> : null}
-            <MoodOverlay />
-            <CartProvider>
-              <div className="flex min-h-full flex-col">
-                <QuietHeader />
-                <main className="relative z-10 flex-1 overflow-x-hidden">
-                  <MainSegmentErrorBoundary>{children}</MainSegmentErrorBoundary>
-                </main>
-                <QuietFooter showAdminFooterLink={showAdminFooterLink}>
-                  <QuietFooterSecondaryNav />
-                </QuietFooter>
-              </div>
-            </CartProvider>
-            <MoodSelector />
-            <VoiceRing />
-          </MoodProvider>
+          <CartProvider>
+            <div className="flex min-h-full flex-col bg-[#f7f1e8] font-[family-name:var(--font-georgian)] text-[#2c241e]">
+              <BrandHeader />
+              <main className="relative z-10 flex-1 overflow-x-hidden">
+                <MainSegmentErrorBoundary>{children}</MainSegmentErrorBoundary>
+              </main>
+              <BrandFooter />
+            </div>
+          </CartProvider>
         </Providers>
       </body>
     </html>
