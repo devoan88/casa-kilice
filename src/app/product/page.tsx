@@ -16,7 +16,7 @@ export default function ProductPage() {
           <BottleMark className="h-[380px] w-auto" />
         </div>
         <div>
-          <p className="text-xs tracking-[0.28em] text-[#8a6a52] uppercase">პირველი პროდუქტი</p>
+          <p className="text-[11px] tracking-[0.28em] text-[#8a6a52] uppercase">პროდუქტის ამბავი</p>
           <h1 className="mt-4 font-[family-name:var(--font-georgian)] text-5xl leading-tight">კრემისებრი ნათების წვეთი</h1>
           <p className="mt-6 text-lg leading-relaxed text-[#5c4d43]">
             სქელი, კრემისებრი წვეთი, რომელიც ერევა ნებისმიერ ტონალურ კრემში. რამდენიმე წვეთი ანათებს და ატენიანებს მთელ
@@ -43,8 +43,9 @@ export default function ProductPage() {
         </div>
       </div>
 
-      <section className="mx-auto max-w-6xl px-5 pb-8">
-        <h2 className="font-[family-name:var(--font-georgian)] text-3xl">გამოყენება</h2>
+      <section id="ritual" className="mx-auto max-w-6xl px-5 pb-8">
+        <p className="text-[11px] tracking-[0.28em] text-[#8a6a52] uppercase">როგორ გამოიყენოთ</p>
+        <h2 className="mt-3 font-[family-name:var(--font-georgian)] text-3xl">სამი მოძრაობა</h2>
         <ol className="mt-6 max-w-2xl list-decimal space-y-3 pl-5 leading-relaxed text-[#5c4d43]">
           <li>აიღეთ ჩვეული ტონალური კრემი.</li>
           <li>დაუმატეთ ორი ან სამი წვეთი.</li>
